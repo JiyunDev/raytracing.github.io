@@ -13,12 +13,17 @@
 
 #include "common/rtweekend.h"
 #include "hittable.h"
+#include <algorithm>
 
 
 class bvh_node : public hittable  {
     public:
         bvh_node() {}
-        bvh_node(hittable **l, int n, double time0, double time1);
+        bvh_node::bvh_node(hittable_list *list, double time0, double time1)
+            : bvh_node(list->objects, 0, static_cast<int>(list->objects.size()), time0, time1)
+        {}
+        bvh_node(
+            std::vector<hittable*> &objects, int start, int end, double time0, double time1);
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const;
         virtual bool bounding_box(double t0, double t1, aabb& output_box) const;
@@ -87,6 +92,7 @@ int box_z_compare (const void * a, const void * b)
         return 1;
 }
 
+#if 0
 bvh_node::bvh_node(hittable **l, int n, double time0, double time1) {
     int axis = random_int(0,2);
 
@@ -107,6 +113,47 @@ bvh_node::bvh_node(hittable **l, int n, double time0, double time1) {
     else {
         left = new bvh_node(l, n/2, time0, time1);
         right = new bvh_node(l + n/2, n - n/2, time0, time1);
+    }
+
+    aabb box_left, box_right;
+
+    if (  !left->bounding_box (time0, time1, box_left)
+       || !right->bounding_box(time0, time1, box_right)
+    )
+        std::cerr << "no bounding box in bvh_node constructor\n";
+
+    box = surrounding_box(box_left, box_right);
+}
+#endif
+
+
+bvh_node::bvh_node(
+    std::vector<hittable*> &objects, int start, int end, double time0, double time1
+) {
+    auto object_span = end - start;
+
+    if (object_span <= 0)
+        object_span = static_cast<int>(objects.size());
+
+    int axis = random_int(0,2);
+    auto comparator = (axis == 0) ? box_x_compare
+                    : (axis == 1) ? box_y_compare
+                    : box_z_compare;
+
+    if (object_span == 1) {
+        left = right = objects[0];
+    }
+    else if (object_span == 2) {
+        auto minIs0 = comparator(objects[0],objects[1]) < 0;
+        left = objects[minIs0 ? 0 : 1];
+        right = objects[minIs0 ? 1 : 0];
+    }
+    else {
+        std::sort(objects.begin() + start, objects.begin() + end, comparator);
+
+        auto mid = start + object_span/2;
+        left = new bvh_node(objects, start, mid, time0, time1);
+        right = new bvh_node(objects, mid, end, time0, time1);
     }
 
     aabb box_left, box_right;
