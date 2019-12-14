@@ -36,20 +36,6 @@ class bvh_node : public hittable  {
         aabb box;
 };
 
-bool bvh_node::bounding_box(double t0, double t1, aabb& output_box) const {
-    output_box = box;
-    return true;
-}
-
-bool bvh_node::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
-    if (!box.hit(r, t_min, t_max))
-        return false;
-
-    bool hit_left = left->hit(r, t_min, t_max, rec);
-    bool hit_right = right->hit(r, t_min, hit_left ? rec.t : t_max, rec);
-
-    return hit_left || hit_right;
-}
 
 bool box_x_compare (const hittable *a, const hittable *b) {
     aabb box_a, box_b;
@@ -59,6 +45,7 @@ bool box_x_compare (const hittable *a, const hittable *b) {
 
     return box_a.min().x() < box_b.min().x();
 }
+
 
 bool box_y_compare (const hittable *a, const hittable *b)
 {
@@ -70,6 +57,7 @@ bool box_y_compare (const hittable *a, const hittable *b)
     return box_a.min().y() < box_b.min().y();
 }
 
+
 bool box_z_compare (const hittable *a, const hittable *b)
 {
     aabb box_a, box_b;
@@ -79,40 +67,6 @@ bool box_z_compare (const hittable *a, const hittable *b)
 
     return box_a.min().z() < box_b.min().z();
 }
-
-#if 0
-bvh_node::bvh_node(hittable **l, int n, double time0, double time1) {
-    int axis = random_int(0,2);
-
-    if (axis == 0)
-        qsort(l, n, sizeof(hittable *), box_x_compare);
-    else if (axis == 1)
-        qsort(l, n, sizeof(hittable *), box_y_compare);
-    else
-        qsort(l, n, sizeof(hittable *), box_z_compare);
-
-    if (n == 1) {
-        left = right = l[0];
-    }
-    else if (n == 2) {
-        left = l[0];
-        right = l[1];
-    }
-    else {
-        left = new bvh_node(l, n/2, time0, time1);
-        right = new bvh_node(l + n/2, n - n/2, time0, time1);
-    }
-
-    aabb box_left, box_right;
-
-    if (  !left->bounding_box (time0, time1, box_left)
-       || !right->bounding_box(time0, time1, box_right)
-    )
-        std::cerr << "no bounding box in bvh_node constructor\n";
-
-    box = surrounding_box(box_left, box_right);
-}
-#endif
 
 
 bvh_node::bvh_node(
@@ -128,7 +82,7 @@ bvh_node::bvh_node(
     int axis = random_int(0,2);
     auto comparator = (axis == 0) ? box_x_compare
                     : (axis == 1) ? box_y_compare
-                    : box_z_compare;
+                                  : box_z_compare;
 
     if (object_span == 1) {
         left = right = objects[start];
@@ -156,6 +110,23 @@ bvh_node::bvh_node(
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
     box = surrounding_box(box_left, box_right);
+}
+
+
+bool bvh_node::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
+    if (!box.hit(r, t_min, t_max))
+        return false;
+
+    bool hit_left = left->hit(r, t_min, t_max, rec);
+    bool hit_right = right->hit(r, t_min, hit_left ? rec.t : t_max, rec);
+
+    return hit_left || hit_right;
+}
+
+
+bool bvh_node::bounding_box(double t0, double t1, aabb& output_box) const {
+    output_box = box;
+    return true;
 }
 
 
