@@ -18,10 +18,12 @@
 
 class bvh_node : public hittable  {
     public:
-        bvh_node() {}
+        bvh_node() = delete;
+
         bvh_node::bvh_node(hittable_list *list, double time0, double time1)
             : bvh_node(list->objects, 0, static_cast<int>(list->objects.size()), time0, time1)
         {}
+
         bvh_node(
             std::vector<hittable*> &objects, int start, int end, double time0, double time1);
 
@@ -142,13 +144,11 @@ bvh_node::bvh_node(
 
     if (object_span == 1) {
         left = right = objects[0];
-    }
-    else if (object_span == 2) {
+    } else if (object_span == 2) {
         auto minIs0 = comparator(objects[0],objects[1]) < 0;
         left = objects[minIs0 ? 0 : 1];
         right = objects[minIs0 ? 1 : 0];
-    }
-    else {
+    } else {
         std::sort(objects.begin() + start, objects.begin() + end, comparator);
 
         auto mid = start + object_span/2;
