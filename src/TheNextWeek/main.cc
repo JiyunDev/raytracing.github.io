@@ -63,9 +63,9 @@ hittable *two_spheres() {
 }
 
 hittable *final() {
-    hittable_list *boxes1 = new hittable_list();
     material *ground = new lambertian(new constant_texture(vec3(0.48, 0.83, 0.53)));
 
+    hittable_list boxes1;
     const int boxes_per_side = 20;
     for (int i = 0; i < boxes_per_side; i++) {
         for (int j = 0; j < boxes_per_side; j++) {
@@ -76,7 +76,7 @@ hittable *final() {
             auto x1 = x0 + w;
             auto y1 = random_double(1,101);
             auto z1 = z0 + w;
-            boxes1->add(new box(vec3(x0,y0,z0), vec3(x1,y1,z1), ground));
+            boxes1.add(new box(vec3(x0,y0,z0), vec3(x1,y1,z1), ground));
         }
     }
 
@@ -110,10 +110,10 @@ hittable *final() {
     objects->add(new sphere(vec3(220,280, 300), 80, new lambertian(pertext)));
 
     int ns = 1000;
-    hittable_list *boxes2 = new hittable_list();
+    hittable_list boxes2;
     material *white = new lambertian(new constant_texture(vec3(0.73, 0.73, 0.73)));
     for (int j = 0; j < ns; j++) {
-        boxes2->add(new sphere(vec3::random(0,165), 10, white));
+        boxes2.add(new sphere(vec3::random(0,165), 10, white));
     }
 
     objects->add(new translate(
@@ -266,14 +266,14 @@ hittable *simple_light() {
 }
 
 hittable *random_scene() {
-    hittable_list *objects = new hittable_list();
+    hittable_list objects;
 
     texture *checker = new checker_texture(
         new constant_texture(vec3(0.2, 0.3, 0.1)),
         new constant_texture(vec3(0.9, 0.9, 0.9))
     );
 
-    objects->add(new sphere(vec3(0,-1000,0), 1000, new lambertian(checker)));
+    objects.add(new sphere(vec3(0,-1000,0), 1000, new lambertian(checker)));
 
     for (int a = -10; a < 10; a++) {
         for (int b = -10; b < 10; b++) {
@@ -283,7 +283,7 @@ hittable *random_scene() {
                 if (choose_mat < 0.8) {
                     // diffuse
                     auto albedo = vec3::random() * vec3::random();
-                    objects->add(new moving_sphere(
+                    objects.add(new moving_sphere(
                         center, center + vec3(0, random_double(0,.5), 0), 0.0, 1.0, 0.2,
                         new lambertian(new constant_texture(albedo))
                     ));
@@ -291,19 +291,19 @@ hittable *random_scene() {
                     // metal
                     auto albedo = vec3::random(.5, 1);
                     auto fuzz = random_double(0, .5);
-                    objects->add(new sphere(center, 0.2, new metal(albedo, fuzz)));
+                    objects.add(new sphere(center, 0.2, new metal(albedo, fuzz)));
                 } else {
                     // glass
-                    objects->add(new sphere(center, 0.2, new dielectric(1.5)));
+                    objects.add(new sphere(center, 0.2, new dielectric(1.5)));
                 }
             }
         }
     }
 
-    objects->add(new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5)));
-    objects->add(new sphere(
+    objects.add(new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5)));
+    objects.add(new sphere(
         vec3(-4, 1, 0), 1.0, new lambertian(new constant_texture(vec3(0.4, 0.2, 0.1)))));
-    objects->add(new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0)));
+    objects.add(new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0)));
 
     return new bvh_node(objects, 0.0, 1.0);
 }
