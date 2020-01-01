@@ -1,0 +1,8 @@
+*.ppm
+*.db
+project/Win32Project1/.vs/
+project/Win32Project1/ipch/
+project/Win32Project1/Debug/
+project/Win32Project1/RayTracingInWeek/Debug/
+project/Win32Project1/RayTracingInWeek/x64/
+project/Win32Project1/x64/
